@@ -68,14 +68,12 @@ def is_move_legal(board: list[list], pos_1: int, pos_2: int) -> bool:
     middle_col = pos_1_coords[1] + (col_diff // 2)
     middle_occupied = True if board[middle_row][middle_col] == 1 else False
 
-    if not middle_occupied:
-        legality = False
-
     beginning_occupied = board[pos_1_coords[0]][pos_1_coords[1]] == 1
     end_unoccupied = board[pos_2_coords[0]][pos_2_coords[1]] == 0
-    legality = beginning_occupied and end_unoccupied
+    legality = legality and beginning_occupied and middle_occupied and end_unoccupied
 
     return legality
+
 
 def make_move(board: list[list], pos_1: int, pos_2: int) -> list[list]:
     new_board = board
@@ -98,11 +96,11 @@ def make_move(board: list[list], pos_1: int, pos_2: int) -> list[list]:
 board = [
     [-1, -1, -1, -1, 1, -1, -1, -1, -1],
     [-1, -1, -1, 1, -1, 1, -1, -1, -1],
-    [-1, -1, 1, -1, 1, -1, 0, -1, -1],
+    [-1, -1, 1, -1, 1, -1, 1, -1, -1],
     [-1, 1, -1, 1, -1, 1, -1, 1, -1],
-    [1, -1, 1, -1, 1, -1, 1, -1, 1],
+    [1, -1, 1, -1, 1, -1, 1, -1, 0],
 ]
 
 print_board(board)
-board = make_move(board, 15, 6)
+board = make_move(board, 13, 15)
 print_board(board)
