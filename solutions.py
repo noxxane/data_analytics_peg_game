@@ -16,34 +16,22 @@ def print_board(board: list[list]):
 def pos_int_to_matrix_coord(pos_int) -> tuple[int, int]:
     if pos_int == 1:
         return (0, 4)
-    elif pos_int == 2:
-        return (1, 3)
-    elif pos_int == 3:
-        return (1, 5)
-    elif pos_int == 4:
-        return (2, 2)
-    elif pos_int == 5:
-        return (2, 4)
-    elif pos_int == 6:
-        return (2, 6)
-    elif pos_int == 7:
-        return (3, 1)
-    elif pos_int == 8:
-        return (3, 3)
-    elif pos_int == 9:
-        return (3, 5)
-    elif pos_int == 10:
-        return (3, 7)
-    elif pos_int == 11:
-        return (4, 0)
-    elif pos_int == 12:
-        return (4, 2)
-    elif pos_int == 13:
-        return (4, 4)
-    elif pos_int == 14:
-        return (4, 6)
-    elif pos_int == 15:
-        return (4, 8)
+    elif 2 <= pos_int <= 3:
+        r = 1
+        c = (2 * pos_int) - 1
+        return (r, c)
+    elif 4 <= pos_int <= 6:
+        r = 2
+        c = (2 * pos_int) - 6
+        return (r, c)
+    elif 7 <= pos_int <= 10:
+        r = 3
+        c = (2 * pos_int) - 13
+        return (r, c)
+    elif 11 <= pos_int <= 15:
+        r = 4
+        c = (pos_int - 11) * 2
+        return (r, c)
     else:
         print("Don't recognize pos_int. Skibidi!")
         # out of range index values
