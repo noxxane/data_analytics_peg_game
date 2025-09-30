@@ -51,59 +51,58 @@ def pos_int_to_matrix_coord(pos_int) -> tuple[int, int]:
 
 
 def is_move_legal(board: list[list], pos_1: int, pos_2: int) -> bool:
+    legality = False
+
     pos_1_coords = pos_int_to_matrix_coord(pos_1)
     pos_2_coords = pos_int_to_matrix_coord(pos_2)
-    # horizontally right
-    # horizontally left
-    # vertically up
-    if (pos_1_coords[0] + 2 == pos_2_coords[0]) and (
-        board[pos_1_coords[0] + 1][pos_1_coords[1]] == 1
+
+    row_diff = pos_2_coords[0] - pos_1_coords[0]
+    col_diff = pos_2_coords[1] - pos_1_coords[1]
+
+    if (row_diff in {-4, 0, 4} and col_diff in {-4, 0, 4}) and (
+        row_diff != 0 or col_diff != 0
     ):
-        return True
-    # vertically down
-    if (pos_1_coords[0] - 2 == pos_2_coords[0]) and (
-        board[pos_1_coords[0] - 1][pos_1_coords[1]] == 1
-    ):
-        return True
-    # diagonally right-down
-    if (
-        (pos_1_coords[0] + 2 == pos_2_coords[0])
-        and (pos_1_coords[1] + 2 == pos_2_coords[1])
-        and (board[pos_1_coords[0] + 1][pos_1_coords[0] + 1] == 1)
-    ):
-        return True
-    # diagonally left-down
-    if (
-        (pos_1_coords[0] + 2 == pos_2_coords[0])
-        and (pos_1_coords[1] - 2 == pos_2_coords[1])
-        and (board[pos_1_coords[0] + 1][pos_1_coords[0] - 1] == 1)
-    ):
-        return True
-    # diagonally right-up
-    if (
-        (pos_1_coords[0] - 2 == pos_2_coords[0])
-        and (pos_1_coords[1] + 2 == pos_2_coords[1])
-        and (board[pos_1_coords[0] - 1][pos_1_coords[0] + 1] == 1)
-    ):
-        return True
-    # diagonally left-up
-    if (
-        (pos_1_coords[0] - 2 == pos_2_coords[0])
-        and (pos_1_coords[1] - 2 == pos_2_coords[1])
-        and (board[pos_1_coords[0] - 1][pos_1_coords[0] - 1] == 1)
-    ):
-        return True
-    else:
-        return False
+        legality = True
+
+    middle_row = pos_1_coords[0] + (row_diff // 2)
+    middle_col = pos_1_coords[1] + (col_diff // 2)
+    middle_occupied = True if board[middle_row][middle_col] == 1 else False
+
+    if not middle_occupied:
+        legality = False
+
+    beginning_occupied = board[pos_1_coords[0]][pos_1_coords[1]] == 1
+    end_unoccupied = board[pos_2_coords[0]][pos_2_coords[1]] == 0
+    legality = beginning_occupied and end_unoccupied
+
+    return legality
+
+def make_move(board: list[list], pos_1: int, pos_2: int) -> list[list]:
+    new_board = board
+    if is_move_legal(board, pos_1, pos_2):
+        pos_1_coords = pos_int_to_matrix_coord(pos_1)
+        pos_2_coords = pos_int_to_matrix_coord(pos_2)
+
+        row_diff = pos_2_coords[0] - pos_1_coords[0]
+        col_diff = pos_2_coords[1] - pos_1_coords[1]
+
+        middle_row = pos_1_coords[0] + (row_diff // 2)
+        middle_col = pos_1_coords[1] + (col_diff // 2)
+
+        new_board[pos_1_coords[0]][pos_1_coords[1]] = 0
+        new_board[middle_row][middle_col] = 0
+        new_board[pos_2_coords[0]][pos_2_coords[1]] = 1
+    return new_board
 
 
 board = [
     [-1, -1, -1, -1, 1, -1, -1, -1, -1],
     [-1, -1, -1, 1, -1, 1, -1, -1, -1],
-    [-1, -1, 1, -1, 1, -1, 1, -1, -1],
+    [-1, -1, 1, -1, 1, -1, 0, -1, -1],
     [-1, 1, -1, 1, -1, 1, -1, 1, -1],
-    [1, -1, 1, -1, 1, -1, 1, -1, 0],
+    [1, -1, 1, -1, 1, -1, 1, -1, 1],
 ]
 
 print_board(board)
-print(is_move_legal(board, 13, 15))
+board = make_move(board, 15, 6)
+print_board(board)
