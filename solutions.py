@@ -2,6 +2,17 @@
 
 import copy
 
+PADDING = -1
+EMPTY = 0
+PEG = 1
+
+BOARD_HEIGHT = 5
+BOARD_WIDTH = 9
+NUM_POSITIONS = 15
+
+MIN_POSITION = 1
+MAX_POSITION = 15
+
 
 def print_board(board: list[list]):
     """prints a board in a readable format where padding spaces are not
@@ -10,11 +21,11 @@ def print_board(board: list[list]):
     for line in board:
         line_string = ""
         for peg in line:
-            if peg == -1:
+            if peg == PADDING:
                 line_string += " "
-            elif peg == 0:
+            elif peg == EMPTY:
                 line_string += "O"
-            elif peg == 1:
+            elif peg == PEG:
                 line_string += "I"
             else:
                 print("Don't recognize peg value.")
@@ -107,8 +118,8 @@ def possible_moves(board: list[list]) -> list[tuple[int, int]]:
     anyway. (checking if pos_2 is occupied, for instance, would eliminate up to
              14 possible moves)"""
     possible_moves_list = []
-    for pos_1 in range(1, 15 + 1):
-        for pos_2 in range(1, 15 + 1):
+    for pos_1 in range(MIN_POSITION, MAX_POSITION + 1):
+        for pos_2 in range(MIN_POSITION, MAX_POSITION + 1):
             if is_move_legal(board, pos_1, pos_2):
                 possible_moves_list.append((pos_1, pos_2))
 
@@ -119,7 +130,7 @@ def is_board_solved(board: list[list]) -> bool:
     """checks if a board is solved by counting the pegs left on the board"""
     pegs_remaining = 0
     for row in board:
-        pegs_remaining += row.count(1)
+        pegs_remaining += row.count(PEG)
     if pegs_remaining == 1:
         return True
     return False
@@ -158,35 +169,33 @@ def solve_board(
 
     return None
 
+def create_full_board() -> list[list]:
+    """crestes a full board, with every peg hole filled"""
+    board = [
+        [PADDING, PADDING, PADDING, PADDING, PEG, PADDING, PADDING, PADDING, PADDING],
+        [PADDING, PADDING, PADDING, PEG, PADDING, PEG, PADDING, PADDING, PADDING],
+        [PADDING, PADDING, PEG, PADDING, PEG, PADDING, PEG, PADDING, PADDING],
+        [PADDING, PEG, PADDING, PEG, PADDING, PEG, PADDING, PEG, PADDING],
+        [PEG, PADDING, PEG, PADDING, PEG, PADDING, PEG, PADDING, PEG],
+    ]
+
+    return board
 
 def main():
     """main func"""
-    print("Initial board:")
-    board = [
-        [-1, -1, -1, -1, 1, -1, -1, -1, -1],
-        [-1, -1, -1, 1, -1, 1, -1, -1, -1],
-        [-1, -1, 1, -1, 1, -1, 1, -1, -1],
-        [-1, 1, -1, 1, -1, 1, -1, 1, -1],
-        [1, -1, 1, -1, 1, -1, 1, -1, 0],
-    ]
-    print_board(board)
-    print()
+    for position in range(MIN_POSITION, MAX_POSITION + 1):
+        board = create_full_board()
 
-    for i in range(1, 15 + 1):
-        board = [
-            [-1, -1, -1, -1, 1, -1, -1, -1, -1],
-            [-1, -1, -1, 1, -1, 1, -1, -1, -1],
-            [-1, -1, 1, -1, 1, -1, 1, -1, -1],
-            [-1, 1, -1, 1, -1, 1, -1, 1, -1],
-            [1, -1, 1, -1, 1, -1, 1, -1, 1],
-        ]
-
-        matrix_coord_of_pos_int = pos_int_to_matrix_coord(i)
+        matrix_coord_of_pos_int = pos_int_to_matrix_coord(position)
         row = matrix_coord_of_pos_int[0]
         col = matrix_coord_of_pos_int[1]
-        board[row][col] = 0
+        board[row][col] = EMPTY
 
-        print("Solving...")
+        print("Initial board:")
+        print_board(board)
+        print()
+
+        print(f"Solving with starting empty position: {position}")
         visited_states = set()
         solution = solve_board(board, [], visited_states)
 
@@ -194,8 +203,8 @@ def main():
             print(f"Found solution with {len(solution)} steps.")
             print()
             print("Move sequence:")
-            for i, move in enumerate(solution, 1):
-                print(f"{i}. Move from position {move[0]} to {move[1]}.")
+            for step_num, move in enumerate(solution, 1):
+                print(f"{step_num}. Move from position {move[0]} to {move[1]}.")
 
             print()
             print("Final board:")
