@@ -14,7 +14,7 @@ MIN_POSITION = 1
 MAX_POSITION = 15
 
 
-def print_board(board: list[list]):
+def print_board(board: list[list[int]]):
     """prints a board in a readable format where padding spaces are not
     printed, empty spaces are printed as O, and spaces with pegs are printed as
     I"""
@@ -28,11 +28,11 @@ def print_board(board: list[list]):
             elif peg == PEG:
                 line_string += "I"
             else:
-                print("Don't recognize peg value.")
+                raise ValueError(f"Unrecognized peg value: {peg}")
         print(line_string)
 
 
-def pos_int_to_matrix_coord(pos_int) -> tuple[int, int]:
+def pos_int_to_matrix_coord(pos_int: int) -> tuple[int, int]:
     """translates a position integer to its matrix coordinate; 1, for instance,
     has the matrix coordinate (0, 4). this is a relatively hacky solution,
     where i found linear functions which translate the positions rather than
@@ -41,108 +41,118 @@ def pos_int_to_matrix_coord(pos_int) -> tuple[int, int]:
     if pos_int == 1:
         return (0, 4)
     if 2 <= pos_int <= 3:
-        r = 1
-        c = (2 * pos_int) - 1
-        return (r, c)
+        return (1, (2 * pos_int) - 1)
     if 4 <= pos_int <= 6:
-        r = 2
-        c = (2 * pos_int) - 6
-        return (r, c)
+        return (2, (2 * pos_int) - 6)
     if 7 <= pos_int <= 10:
-        r = 3
-        c = (2 * pos_int) - 13
-        return (r, c)
+        return (3, (2 * pos_int) - 13)
     if 11 <= pos_int <= 15:
-        r = 4
-        c = (pos_int - 11) * 2
-        return (r, c)
-    print("Don't recognize pos_int.")
-    # out of range index values
-    return (6, 10)
+        return (4, (pos_int - 11) * 2)
+    raise ValueError(f"Invalid position integer: {pos_int}")
 
 
-def is_move_legal(board: list[list], pos_1: int, pos_2: int) -> bool:
+def board_element_from_pos_int(board: list[list[int]], pos_int: int) -> int:
+    """gets a board element from its position integer"""
+    row, col = pos_int_to_matrix_coord(pos_int)
+    return board[row][col]
+
+
+def is_move_legal(board: list[list[int]], start_pos: int, end_pos: int) -> bool:
     """checks if a move is legal. i could have hardcoded this for each type of
     move (horizontal [1--2 possible], vertical [1--2 possible], diagonal [1--4
     possible]), but this solution takes up fewer lines of code, is simpler and
     easier to understand, and empirically works."""
     legality = False
 
-    pos_1_coords = pos_int_to_matrix_coord(pos_1)
-    pos_2_coords = pos_int_to_matrix_coord(pos_2)
+    start_pos_coords = pos_int_to_matrix_coord(start_pos)
+    end_pos_coords = pos_int_to_matrix_coord(end_pos)
 
-    row_diff = pos_2_coords[0] - pos_1_coords[0]
-    col_diff = pos_2_coords[1] - pos_1_coords[1]
+    row_diff = end_pos_coords[0] - start_pos_coords[0]
+    col_diff = end_pos_coords[1] - start_pos_coords[1]
 
+    # although these numbers might seem strange if you're only looking at the
+    # peg game itself, they make sense in the matrix. to jump vertically, you
+    # must move -2 or 2 rows; to jump horizontally, you must jump -2 or 2
+    # columns. to jump *diagonally*, however, you must jump -2 or 2 rows and -4
+    # or 4 columns. hence, this code.
     if (row_diff in {-2, 0, 2} and col_diff in {-4, -2, 0, 2, 4}) and (
         row_diff != 0 or col_diff != 0
     ):
         legality = True
 
-    middle_row = pos_1_coords[0] + (row_diff // 2)
-    middle_col = pos_1_coords[1] + (col_diff // 2)
-    middle_occupied = board[middle_row][middle_col] == 1
+    middle_row = start_pos_coords[0] + (row_diff // 2)
+    middle_col = start_pos_coords[1] + (col_diff // 2)
+    middle_occupied = board[middle_row][middle_col] == PEG
 
-    beginning_occupied = board[pos_1_coords[0]][pos_1_coords[1]] == 1
-    end_unoccupied = board[pos_2_coords[0]][pos_2_coords[1]] == 0
+    beginning_occupied = board_element_from_pos_int(board, start_pos) == PEG
+    end_unoccupied = board_element_from_pos_int(board, end_pos) == EMPTY
     legality = legality and beginning_occupied and middle_occupied and end_unoccupied
 
     return legality
 
 
-def make_move(board: list[list], pos_1: int, pos_2: int) -> list[list]:
+def make_move(board: list[list[int]], start_pos: int, end_pos: int) -> list[list[int]]:
     """makes a move by creating a copy of the given board, making the move (and
     checking the move's legality), and returning the new board with the move
     made."""
+    if not is_move_legal(board, start_pos, end_pos):
+        return copy.deepcopy(board)
+
     new_board = copy.deepcopy(board)
-    if is_move_legal(board, pos_1, pos_2):
-        pos_1_coords = pos_int_to_matrix_coord(pos_1)
-        pos_2_coords = pos_int_to_matrix_coord(pos_2)
+    start_pos_coords = pos_int_to_matrix_coord(start_pos)
+    end_pos_coords = pos_int_to_matrix_coord(end_pos)
 
-        row_diff = pos_2_coords[0] - pos_1_coords[0]
-        col_diff = pos_2_coords[1] - pos_1_coords[1]
+    row_diff = end_pos_coords[0] - start_pos_coords[0]
+    col_diff = end_pos_coords[1] - start_pos_coords[1]
 
-        middle_row = pos_1_coords[0] + (row_diff // 2)
-        middle_col = pos_1_coords[1] + (col_diff // 2)
+    middle_row = start_pos_coords[0] + (row_diff // 2)
+    middle_col = start_pos_coords[1] + (col_diff // 2)
 
-        new_board[pos_1_coords[0]][pos_1_coords[1]] = 0
-        new_board[middle_row][middle_col] = 0
-        new_board[pos_2_coords[0]][pos_2_coords[1]] = 1
+    new_board[start_pos_coords[0]][start_pos_coords[1]] = 0
+    new_board[middle_row][middle_col] = 0
+    new_board[end_pos_coords[0]][end_pos_coords[1]] = 1
+
     return new_board
 
 
-def possible_moves(board: list[list]) -> list[tuple[int, int]]:
+def possible_moves(board: list[list[int]]) -> list[tuple[int, int]]:
     """checks every possible position for every possible move by checking the
     legality on the given board. there is likely a more efficient way to do
     this, but the solution space is so low that the program runs very quickly
-    anyway. (checking if pos_2 is occupied, for instance, would eliminate up to
+    anyway. (checking if end_pos is occupied, for instance, would eliminate up to
              14 possible moves)"""
-    possible_moves_list = []
-    for pos_1 in range(MIN_POSITION, MAX_POSITION + 1):
-        for pos_2 in range(MIN_POSITION, MAX_POSITION + 1):
-            if is_move_legal(board, pos_1, pos_2):
-                possible_moves_list.append((pos_1, pos_2))
+    moves = []
 
-    return possible_moves_list
+    possible_start_pos = [
+        x
+        for x in range(MIN_POSITION, MAX_POSITION + 1)
+        if board_element_from_pos_int(board, x) == PEG
+    ]
+    possible_end_pos = [
+        x
+        for x in range(MIN_POSITION, MAX_POSITION + 1)
+        if board_element_from_pos_int(board, x) == EMPTY
+    ]
+    for start_pos in possible_start_pos:
+        for end_pos in possible_end_pos:
+            if is_move_legal(board, start_pos, end_pos):
+                moves.append((start_pos, end_pos))
+
+    return moves
 
 
-def is_board_solved(board: list[list]) -> bool:
+def is_board_solved(board: list[list[int]]) -> bool:
     """checks if a board is solved by counting the pegs left on the board"""
-    pegs_remaining = 0
-    for row in board:
-        pegs_remaining += row.count(PEG)
-    if pegs_remaining == 1:
-        return True
-    return False
+    return sum(row.count(PEG) for row in board) == 1
 
 
-def board_to_tuple(board: list[list]) -> tuple:
+def board_to_tuple(board: list[list[int]]) -> tuple:
     """converts a board to a tuple so it's easier to solve"""
     return tuple(tuple(row) for row in board)
 
 
 def solve_board(
-    board: list[list], path: list[tuple[int, int]], visited: set
+    board: list[list[int]], path: list[tuple[int, int]], visited: set[tuple]
 ) -> list[tuple[int, int]] | None:
     """recursively solves a board using a dfs, or depth first search. it goes
     down each possible move path, backtracking if the path ends without finding
@@ -169,8 +179,9 @@ def solve_board(
 
     return None
 
-def create_full_board() -> list[list]:
-    """crestes a full board, with every peg hole filled"""
+
+def create_full_board() -> list[list[int]]:
+    """creates a full board, with every peg hole filled"""
     board = [
         [PADDING, PADDING, PADDING, PADDING, PEG, PADDING, PADDING, PADDING, PADDING],
         [PADDING, PADDING, PADDING, PEG, PADDING, PEG, PADDING, PADDING, PADDING],
@@ -181,16 +192,16 @@ def create_full_board() -> list[list]:
 
     return board
 
+
 def main():
     """main func"""
     for position in range(MIN_POSITION, MAX_POSITION + 1):
         board = create_full_board()
 
-        matrix_coord_of_pos_int = pos_int_to_matrix_coord(position)
-        row = matrix_coord_of_pos_int[0]
-        col = matrix_coord_of_pos_int[1]
+        row, col = pos_int_to_matrix_coord(position)
         board[row][col] = EMPTY
 
+        print("-" * 40)
         print("Initial board:")
         print_board(board)
         print()
