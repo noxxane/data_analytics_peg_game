@@ -1,5 +1,6 @@
 """main file for peg game solving"""
 import copy
+import printing
 import solving
 
 PADDING = -1
@@ -18,7 +19,7 @@ def main_dfs():
         row, col = solving.pos_int_to_matrix_coord(position)
         board[row][col] = EMPTY
 
-        solving.print_initial_board(board)
+        printing.print_initial_board(board)
 
         print(f"Solving with starting empty position: {position}")
         visited_states = set()
@@ -36,7 +37,7 @@ def main_dfs():
             final_board = copy.deepcopy(board)
             for move in solution:
                 final_board = solving.make_move(final_board, move[0], move[1])
-            solving.print_board(final_board)
+            printing.print_board(final_board)
         else:
             print("No solution found.")
 
@@ -49,7 +50,7 @@ def main_brute():
     row, col = solving.pos_int_to_matrix_coord(position)
     board[row][col] = EMPTY
 
-    solving.print_initial_board(board)
+    printing.print_initial_board(board)
 
     print(f"Solving with starting empty position: {position}")
     solution = solving.brute_force_board(board)
@@ -66,7 +67,7 @@ def main_brute():
         final_board = copy.deepcopy(board)
         for move in solution:
             final_board = solving.make_move(final_board, move[0], move[1])
-        solving.print_board(final_board)
+        printing.print_board(final_board)
     else:
         print("No solution found.")
 
@@ -79,7 +80,7 @@ def main_brute_all_solutions():
     row, col = solving.pos_int_to_matrix_coord(position)
     board[row][col] = EMPTY
 
-    solving.print_initial_board(board)
+    printing.print_initial_board(board)
 
     print(f"Solving with starting empty position: {position}")
     solutions = solving.brute_force_all_solutions(board)
