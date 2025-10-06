@@ -36,6 +36,19 @@ def print_board(board: Board):
         print(line_string)
 
 
+def print_hline():
+    """prints a horizontal line, perhaps better described as 'forty hyphens'"""
+    print("-" * 40)
+
+
+def print_initial_board(board: Board):
+    """prints an board, preceded by an hline"""
+    print_hline()
+    print("Initial Board:")
+    print_board(board)
+    print()
+
+
 def pos_int_to_matrix_coord(pos_int: int) -> tuple[int, int]:
     """translates a position integer to its matrix coordinate; 1, for instance,
     has the matrix coordinate (0, 4). this is a relatively hacky solution,
@@ -107,7 +120,7 @@ def make_move(board: Board, start_pos: int, end_pos: int) -> Board:
             f"Illegal move: cannot move from position {start_pos} to {end_pos}"
         )
 
-    new_board = copy.deepcopy(board)
+    new_board = [row[:] for row in board]
     start_pos_coords = pos_int_to_matrix_coord(start_pos)
     end_pos_coords = pos_int_to_matrix_coord(end_pos)
 
@@ -160,6 +173,9 @@ def board_to_tuple(board: Board) -> tuple:
 
 
 def brute_force_board(board: Board) -> list[tuple[int, int]] | None:
+    """uses a brute force method to solve a board. for every possible move,
+    make that move and see if the board's solved. if it's solved, then return
+    the move list."""
     queue = deque([(board, [])])
     visited = set()
     visited.add(board_to_tuple(board))
@@ -183,7 +199,9 @@ def brute_force_board(board: Board) -> list[tuple[int, int]] | None:
     return None
 
 
-def brute_force_all_solutions(board: Board) -> list[list[tuple[int, int]]]:
+def brute_force_all_solutions(board: Board) -> list[list[tuple[int, int]]] | None:
+    """uses a brute force method to find all possible solutions from a given
+    starting board"""
     queue = deque([(board, [])])
     visited_with_path = {}
     all_solutions = []
@@ -201,10 +219,7 @@ def brute_force_all_solutions(board: Board) -> list[list[tuple[int, int]]]:
         moves = possible_moves(current_board)
 
         for move in moves:
-            print(f"making move: {move}")
             new_board = make_move(current_board, move[0], move[1])
-            print("new board:")
-            print_board(new_board)
             board_state = board_to_tuple(new_board)
             new_path = path + [move]
             path_tuple = tuple(new_path)
@@ -259,103 +274,3 @@ def create_full_board() -> Board:
     ]
 
     return board
-
-
-def main_dfs():
-    """main func"""
-    for position in range(MIN_POSITION, MAX_POSITION + 1):
-        board = create_full_board()
-
-        row, col = pos_int_to_matrix_coord(position)
-        board[row][col] = EMPTY
-
-        print("-" * 40)
-        print("Initial board:")
-        print_board(board)
-        print()
-
-        print(f"Solving with starting empty position: {position}")
-        visited_states = set()
-        solution = solve_board(board, [], visited_states)
-
-        if solution:
-            print(f"Found solution with {len(solution)} steps.")
-            print()
-            print("Move sequence:")
-            for step_num, move in enumerate(solution, 1):
-                print(f"{step_num}. Move from position {move[0]} to {move[1]}.")
-
-            print()
-            print("Final board:")
-            final_board = copy.deepcopy(board)
-            for move in solution:
-                final_board = make_move(final_board, move[0], move[1])
-            print_board(final_board)
-        else:
-            print("No solution found.")
-
-
-def main_brute():
-    """main brute func"""
-    position = 1
-    board = create_full_board()
-
-    row, col = pos_int_to_matrix_coord(position)
-    board[row][col] = EMPTY
-
-    print("-" * 40)
-    print("Initial board:")
-    print_board(board)
-    print()
-
-    print(f"Solving with starting empty position: {position}")
-    solution = brute_force_board(board)
-
-    if solution:
-        print(f"Found solution with {len(solution)} steps.")
-        print()
-        print("Move sequence:")
-        for step_num, move in enumerate(solution, 1):
-            print(f"{step_num}. Move from position {move[0]} to {move[1]}.")
-
-        print()
-        print("Final board:")
-        final_board = copy.deepcopy(board)
-        for move in solution:
-            final_board = make_move(final_board, move[0], move[1])
-        print_board(final_board)
-    else:
-        print("No solution found.")
-
-
-def main_brute_all_solutions():
-    """main brute all solutions func"""
-    position = 1
-    board = create_full_board()
-
-    row, col = pos_int_to_matrix_coord(position)
-    board[row][col] = EMPTY
-
-    print("-" * 40)
-    print("Initial board:")
-    print_board(board)
-    print()
-
-    print(f"Solving with starting empty position: {position}")
-    solutions = brute_force_all_solutions(board)
-
-    if solutions:
-        print(f"Found {len(solutions)} total solutions.")
-        print()
-
-        for sol_num, solution in enumerate(solutions, 1):
-            print(f"Solution #{sol_num} ({len(solution)} moves):")
-            for step_num, move in enumerate(solution, 1):
-                print(f"    {step_num}. Move from position {move[0]} to {move[1]}.")
-            print()
-    else:
-        print("No solution found.")
-
-
-if __name__ == "__main__":
-    main_brute_all_solutions()
