@@ -1,6 +1,8 @@
 """research for data analytics pertaining to the cracker barrel peg game"""
 
 import copy
+from collections import deque
+from typing import TypeAlias
 
 PADDING = -1
 EMPTY = 0
@@ -13,8 +15,10 @@ NUM_POSITIONS = 15
 MIN_POSITION = 1
 MAX_POSITION = 15
 
+Board: TypeAlias = list[list[int]]
 
-def print_board(board: list[list[int]]):
+
+def print_board(board: Board):
     """prints a board in a readable format where padding spaces are not
     printed, empty spaces are printed as O, and spaces with pegs are printed as
     I"""
@@ -37,7 +41,8 @@ def pos_int_to_matrix_coord(pos_int: int) -> tuple[int, int]:
     has the matrix coordinate (0, 4). this is a relatively hacky solution,
     where i found linear functions which translate the positions rather than
     hardcoding them. but it uses significantly fewer lines of code, and that's
-    my metric of success"""
+    my metric of success. raises a value error of the position integer is
+    invalid."""
     if pos_int == 1:
         return (0, 4)
     if 2 <= pos_int <= 3:
@@ -51,13 +56,13 @@ def pos_int_to_matrix_coord(pos_int: int) -> tuple[int, int]:
     raise ValueError(f"Invalid position integer: {pos_int}")
 
 
-def board_element_from_pos_int(board: list[list[int]], pos_int: int) -> int:
+def board_element_from_pos_int(board: Board, pos_int: int) -> int:
     """gets a board element from its position integer"""
     row, col = pos_int_to_matrix_coord(pos_int)
     return board[row][col]
 
 
-def is_move_legal(board: list[list[int]], start_pos: int, end_pos: int) -> bool:
+def is_move_legal(board: Board, start_pos: int, end_pos: int) -> bool:
     """checks if a move is legal. i could have hardcoded this for each type of
     move (horizontal [1--2 possible], vertical [1--2 possible], diagonal [1--4
     possible]), but this solution takes up fewer lines of code, is simpler and
@@ -75,8 +80,10 @@ def is_move_legal(board: list[list[int]], start_pos: int, end_pos: int) -> bool:
     # must move -2 or 2 rows; to jump horizontally, you must jump -2 or 2
     # columns. to jump *diagonally*, however, you must jump -2 or 2 rows and -4
     # or 4 columns. hence, this code.
-    if (row_diff in {-2, 0, 2} and col_diff in {-4, -2, 0, 2, 4}) and (
-        row_diff != 0 or col_diff != 0
+    if (
+        row_diff in {-2, 0, 2}
+        and col_diff in {-4, -2, 0, 2, 4}
+        and (row_diff != 0 or col_diff != 0)
     ):
         legality = True
 
@@ -91,12 +98,14 @@ def is_move_legal(board: list[list[int]], start_pos: int, end_pos: int) -> bool:
     return legality
 
 
-def make_move(board: list[list[int]], start_pos: int, end_pos: int) -> list[list[int]]:
+def make_move(board: Board, start_pos: int, end_pos: int) -> Board:
     """makes a move by creating a copy of the given board, making the move (and
     checking the move's legality), and returning the new board with the move
     made."""
     if not is_move_legal(board, start_pos, end_pos):
-        return copy.deepcopy(board)
+        raise ValueError(
+            f"Illegal move: cannot move from position {start_pos} to {end_pos}"
+        )
 
     new_board = copy.deepcopy(board)
     start_pos_coords = pos_int_to_matrix_coord(start_pos)
@@ -115,12 +124,11 @@ def make_move(board: list[list[int]], start_pos: int, end_pos: int) -> list[list
     return new_board
 
 
-def possible_moves(board: list[list[int]]) -> list[tuple[int, int]]:
-    """checks every possible position for every possible move by checking the
-    legality on the given board. there is likely a more efficient way to do
-    this, but the solution space is so low that the program runs very quickly
-    anyway. (checking if end_pos is occupied, for instance, would eliminate up to
-             14 possible moves)"""
+def possible_moves(board: Board) -> list[tuple[int, int]]:
+    """checks every possible legal (doesn't check for midpoint, but does check
+    for peg in start position and an empty hole in the end position) position
+    for every possible move. then ensures it's legal and returns the list of
+    moves."""
     moves = []
 
     possible_start_pos = [
@@ -141,18 +149,78 @@ def possible_moves(board: list[list[int]]) -> list[tuple[int, int]]:
     return moves
 
 
-def is_board_solved(board: list[list[int]]) -> bool:
+def is_board_solved(board: Board) -> bool:
     """checks if a board is solved by counting the pegs left on the board"""
     return sum(row.count(PEG) for row in board) == 1
 
 
-def board_to_tuple(board: list[list[int]]) -> tuple:
+def board_to_tuple(board: Board) -> tuple:
     """converts a board to a tuple so it's easier to solve"""
     return tuple(tuple(row) for row in board)
 
 
+def brute_force_board(board: Board) -> list[tuple[int, int]] | None:
+    queue = deque([(board, [])])
+    visited = set()
+    visited.add(board_to_tuple(board))
+
+    while queue:
+        current_board, path = queue.popleft()
+
+        if is_board_solved(current_board):
+            return path
+
+        moves = possible_moves(current_board)
+
+        for move in moves:
+            new_board = make_move(current_board, move[0], move[1])
+            board_state = board_to_tuple(new_board)
+
+            if board_state not in visited:
+                visited.add(board_state)
+                queue.append((new_board, path + [move]))
+
+    return None
+
+
+def brute_force_all_solutions(board: Board) -> list[list[tuple[int, int]]]:
+    queue = deque([(board, [])])
+    visited_with_path = {}
+    all_solutions = []
+
+    initial_state = board_to_tuple(board)
+    visited_with_path[initial_state] = {tuple()}
+
+    while queue:
+        current_board, path = queue.popleft()
+
+        if is_board_solved(current_board):
+            all_solutions.append(path)
+            continue
+
+        moves = possible_moves(current_board)
+
+        for move in moves:
+            print(f"making move: {move}")
+            new_board = make_move(current_board, move[0], move[1])
+            print("new board:")
+            print_board(new_board)
+            board_state = board_to_tuple(new_board)
+            new_path = path + [move]
+            path_tuple = tuple(new_path)
+
+            if board_state not in visited_with_path:
+                visited_with_path[board_state] = {path_tuple}
+                queue.append((new_board, new_path))
+            elif path_tuple not in visited_with_path[board_state]:
+                visited_with_path[board_state].add(path_tuple)
+                queue.append((new_board, new_path))
+
+    return all_solutions
+
+
 def solve_board(
-    board: list[list[int]], path: list[tuple[int, int]], visited: set[tuple]
+    board: Board, path: list[tuple[int, int]], visited: set[tuple]
 ) -> list[tuple[int, int]] | None:
     """recursively solves a board using a dfs, or depth first search. it goes
     down each possible move path, backtracking if the path ends without finding
@@ -180,7 +248,7 @@ def solve_board(
     return None
 
 
-def create_full_board() -> list[list[int]]:
+def create_full_board() -> Board:
     """creates a full board, with every peg hole filled"""
     board = [
         [PADDING, PADDING, PADDING, PADDING, PEG, PADDING, PADDING, PADDING, PADDING],
@@ -193,7 +261,7 @@ def create_full_board() -> list[list[int]]:
     return board
 
 
-def main():
+def main_dfs():
     """main func"""
     for position in range(MIN_POSITION, MAX_POSITION + 1):
         board = create_full_board()
@@ -227,5 +295,67 @@ def main():
             print("No solution found.")
 
 
+def main_brute():
+    """main brute func"""
+    position = 1
+    board = create_full_board()
+
+    row, col = pos_int_to_matrix_coord(position)
+    board[row][col] = EMPTY
+
+    print("-" * 40)
+    print("Initial board:")
+    print_board(board)
+    print()
+
+    print(f"Solving with starting empty position: {position}")
+    solution = brute_force_board(board)
+
+    if solution:
+        print(f"Found solution with {len(solution)} steps.")
+        print()
+        print("Move sequence:")
+        for step_num, move in enumerate(solution, 1):
+            print(f"{step_num}. Move from position {move[0]} to {move[1]}.")
+
+        print()
+        print("Final board:")
+        final_board = copy.deepcopy(board)
+        for move in solution:
+            final_board = make_move(final_board, move[0], move[1])
+        print_board(final_board)
+    else:
+        print("No solution found.")
+
+
+def main_brute_all_solutions():
+    """main brute all solutions func"""
+    position = 1
+    board = create_full_board()
+
+    row, col = pos_int_to_matrix_coord(position)
+    board[row][col] = EMPTY
+
+    print("-" * 40)
+    print("Initial board:")
+    print_board(board)
+    print()
+
+    print(f"Solving with starting empty position: {position}")
+    solutions = brute_force_all_solutions(board)
+
+    if solutions:
+        print(f"Found {len(solutions)} total solutions.")
+        print()
+
+        for sol_num, solution in enumerate(solutions, 1):
+            print(f"Solution #{sol_num} ({len(solution)} moves):")
+            for step_num, move in enumerate(solution, 1):
+                print(f"    {step_num}. Move from position {move[0]} to {move[1]}.")
+            print()
+    else:
+        print("No solution found.")
+
+
 if __name__ == "__main__":
-    main()
+    main_brute_all_solutions()
