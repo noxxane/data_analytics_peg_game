@@ -14,26 +14,31 @@ NUM_POSITIONS = 15
 MIN_POSITION = 1
 MAX_POSITION = 15
 
+POSITION_MAP = {
+    1: (0, 4),
+    2: (1, 3),
+    3: (1, 5),
+    4: (2, 2),
+    5: (2, 4),
+    6: (2, 6),
+    7: (3, 1),
+    8: (3, 3),
+    9: (3, 5),
+    10: (3, 7),
+    11: (4, 0),
+    12: (4, 2),
+    13: (4, 4),
+    14: (4, 6),
+    15: (4, 8),
+}
+
 Board: TypeAlias = list[list[int]]
 
 
 def pos_int_to_matrix_coord(pos_int: int) -> tuple[int, int]:
-    """translates a position integer to its matrix coordinate; 1, for instance,
-    has the matrix coordinate (0, 4). this is a relatively hacky solution,
-    where i found linear functions which translate the positions rather than
-    hardcoding them. but it uses significantly fewer lines of code, and that's
-    my metric of success. raises a value error of the position integer is
-    invalid."""
-    if pos_int == 1:
-        return (0, 4)
-    if 2 <= pos_int <= 3:
-        return (1, (2 * pos_int) - 1)
-    if 4 <= pos_int <= 6:
-        return (2, (2 * pos_int) - 6)
-    if 7 <= pos_int <= 10:
-        return (3, (2 * pos_int) - 13)
-    if 11 <= pos_int <= 15:
-        return (4, (pos_int - 11) * 2)
+    """translates a position integer to its matrix coordinate"""
+    if pos_int in POSITION_MAP:
+        return POSITION_MAP[pos_int]
     raise ValueError(f"Invalid position integer: {pos_int}")
 
 

@@ -99,4 +99,4 @@ def main_brute_all_solutions():
 
 
 if __name__ == "__main__":
-    main_brute_all_solutions()
+    main_dfs()
