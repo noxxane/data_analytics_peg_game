@@ -1,9 +1,7 @@
 """printings funcs"""
-from typing import TypeAlias
 
-PADDING = -1
-EMPTY = 0
-PEG = 1
+from typing import TypeAlias
+from constants import PADDING, EMPTY, PEG
 
 Board: TypeAlias = list[list[int]]
 

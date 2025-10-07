@@ -2,43 +2,16 @@
 
 from collections import deque
 from typing import TypeAlias
-
-PADDING = -1
-EMPTY = 0
-PEG = 1
-
-BOARD_HEIGHT = 5
-BOARD_WIDTH = 9
-NUM_POSITIONS = 15
-
-MIN_POSITION = 1
-MAX_POSITION = 15
-
-POSITION_MAP = {
-    1: (0, 4),
-    2: (1, 3),
-    3: (1, 5),
-    4: (2, 2),
-    5: (2, 4),
-    6: (2, 6),
-    7: (3, 1),
-    8: (3, 3),
-    9: (3, 5),
-    10: (3, 7),
-    11: (4, 0),
-    12: (4, 2),
-    13: (4, 4),
-    14: (4, 6),
-    15: (4, 8),
-}
+from constants import PADDING, EMPTY, PEG
+import constants
 
 Board: TypeAlias = list[list[int]]
 
 
 def pos_int_to_matrix_coord(pos_int: int) -> tuple[int, int]:
     """translates a position integer to its matrix coordinate"""
-    if pos_int in POSITION_MAP:
-        return POSITION_MAP[pos_int]
+    if pos_int in constants.POSITION_MAP:
+        return constants.POSITION_MAP[pos_int]
     raise ValueError(f"Invalid position integer: {pos_int}")
 
 
@@ -119,12 +92,12 @@ def possible_moves(board: Board) -> list[tuple[int, int]]:
 
     possible_start_pos = [
         x
-        for x in range(MIN_POSITION, MAX_POSITION + 1)
+        for x in range(constants.MIN_POSITION, constants.MAX_POSITION + 1)
         if board_element_from_pos_int(board, x) == PEG
     ]
     possible_end_pos = [
         x
-        for x in range(MIN_POSITION, MAX_POSITION + 1)
+        for x in range(constants.MIN_POSITION, constants.MAX_POSITION + 1)
         if board_element_from_pos_int(board, x) == EMPTY
     ]
     for start_pos in possible_start_pos:
@@ -137,7 +110,7 @@ def possible_moves(board: Board) -> list[tuple[int, int]]:
 
 def is_board_solved(board: Board) -> bool:
     """checks if a board is solved by counting the pegs left on the board"""
-    return sum(row.count(PEG) for row in board) == 1
+    return sum(cell == PEG for row in board for cell in row) == 1
 
 
 def board_to_tuple(board: Board) -> tuple:
@@ -172,7 +145,7 @@ def brute_force_board(board: Board) -> list[tuple[int, int]] | None:
     return None
 
 
-def brute_force_all_solutions(board: Board) -> list[list[tuple[int, int]]] | None:
+def brute_force_all_solutions(board: Board) -> list[list[tuple[int, int]]]:
     """uses a brute force method to find all possible solutions from a given
     starting board"""
     queue = deque([(board, [])])

@@ -1,23 +1,18 @@
 """main file for peg game solving"""
+
 import copy
+import constants
 import printing
 import solving
-
-PADDING = -1
-EMPTY = 0
-PEG = 1
-
-MIN_POSITION = 1
-MAX_POSITION = 15
 
 
 def main_dfs():
     """main dfs func"""
-    for position in range(MIN_POSITION, MAX_POSITION + 1):
+    for position in range(constants.MIN_POSITION, constants.MAX_POSITION + 1):
         board = solving.create_full_board()
 
         row, col = solving.pos_int_to_matrix_coord(position)
-        board[row][col] = EMPTY
+        board[row][col] = constants.EMPTY
 
         printing.print_initial_board(board)
 
@@ -48,7 +43,7 @@ def main_brute():
     board = solving.create_full_board()
 
     row, col = solving.pos_int_to_matrix_coord(position)
-    board[row][col] = EMPTY
+    board[row][col] = constants.EMPTY
 
     printing.print_initial_board(board)
 
@@ -78,7 +73,7 @@ def main_brute_all_solutions():
     board = solving.create_full_board()
 
     row, col = solving.pos_int_to_matrix_coord(position)
-    board[row][col] = EMPTY
+    board[row][col] = constants.EMPTY
 
     printing.print_initial_board(board)
 
@@ -99,4 +94,4 @@ def main_brute_all_solutions():
 
 
 if __name__ == "__main__":
-    main_dfs()
+    main_brute()
