@@ -1,5 +1,6 @@
 """main file for peg game solving"""
 
+import argparse
 import copy
 import constants
 import printing
@@ -37,9 +38,8 @@ def main_dfs():
             print("No solution found.")
 
 
-def main_brute():
+def main_brute(position: int):
     """main brute func"""
-    position = 1
     board = solving.create_full_board()
 
     row, col = solving.pos_int_to_matrix_coord(position)
@@ -67,7 +67,7 @@ def main_brute():
         print("No solution found.")
 
 
-def main_brute_all_solutions():
+def main_brute_all_solutions(position: int):
     """main brute all solutions func"""
     position = 1
     board = solving.create_full_board()
@@ -94,4 +94,20 @@ def main_brute_all_solutions():
 
 
 if __name__ == "__main__":
-    main_brute()
+    parser = argparse.ArgumentParser(
+        prog="peg_board_solver", description="solves peg game"
+    )
+
+    parser.add_argument("solver")
+    parser.add_argument("position")
+
+    args = parser.parse_args()
+    # if args.solver == "dfs":
+    #     main_dfs(args.position)
+    user_position = int(args.position)
+    if args.solver == "brute":
+        main_brute(user_position)
+    elif args.solver == "brute_all_solutions":
+        main_brute_all_solutions(user_position)
+    else:
+        print("don't recognize solver. options are: 'brute', 'brute_all_solutions'")
