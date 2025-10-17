@@ -120,7 +120,7 @@ def main_brute_all_solutions(position: int):
         end_time = time.perf_counter()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time:.6f} seconds")
-        
+
         print("No solution found.")
 
 
